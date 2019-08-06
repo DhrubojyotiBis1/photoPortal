@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>20093025053-bkbt7lp8atmanbdq3vj3infe7rrqoskd.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.20093025053-bkbt7lp8atmanbdq3vj3infe7rrqoskd</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBi2kbLOcKQ4kaPY98AkzWUzRC5Uyh3228</string>
+	<key>GCM_SENDER_ID</key>
+	<string>20093025053</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.photoPortal</string>
+	<key>PROJECT_ID</key>
+	<string>photoportal-368b5</string>
+	<key>STORAGE_BUCKET</key>
+	<string>photoportal-368b5.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:20093025053:ios:6008e109a0da68a8</string>
+	<key>DATABASE_URL</key>
+	<string>https://photoportal-368b5.firebaseio.com</string>
+</dict>
+</plist>
