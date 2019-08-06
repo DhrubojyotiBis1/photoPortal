@@ -6,7 +6,7 @@
 //  Copyright © 2019 Dhrubojyoti. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 class productGeneralnformation{
     var productName = String()
@@ -14,4 +14,13 @@ class productGeneralnformation{
     var discription = String()
     var filePath = String()
     var commentID = String()
+    var image = UIImage()
+    
+    init(productName:String,catagory:String,discription:String,filePath:String,commentID:String) {
+        self.productName = productName
+        self.catagory = catagory
+        self.discription = discription
+        self.commentID = commentID
+        self.filePath = filePath
+    }
 }

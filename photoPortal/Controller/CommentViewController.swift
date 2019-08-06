@@ -12,8 +12,8 @@ import SVProgressHUD
 
 class CommentViewController: UIViewController {
     
-    var selectedImage = UIImage()
     var commentID = Int()
+    var image = UIImage()
     var comments = [String]()
     @IBOutlet weak var sendButton: UIButton!
     @IBOutlet weak var commentTextFeild: UITextField!
@@ -34,16 +34,19 @@ class CommentViewController: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        SVProgressHUD.dismiss()
         NotificationCenter.default.removeObserver(self, name:  UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification , object: nil)
     }
+    
+    
     
     private func configure(){
         SVProgressHUD.show()
         self.sendButton.isEnabled = false
         self.sendButton.layer.cornerRadius = 5
         self.commentTextFeild.layer.cornerRadius = 5
-        self.commetImageView.image = self.selectedImage
+        self.commetImageView.image = self.image
         NotificationCenter.default.addObserver(self,selector: #selector(keyboardWillAppear),name: UIResponder.keyboardWillShowNotification,object: nil)
         NotificationCenter.default.addObserver(self, selector:#selector(keyboardWillDisappear(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
     }
@@ -106,21 +109,23 @@ extension CommentViewController : UITableViewDelegate,UITableViewDataSource{
 }
 
 extension CommentViewController{
+    
     private func getDate(){
         let dateBaseRef = Database.database().reference().child("photoPortalProductComment")
         dateBaseRef.observe(.value) { (DataSnapshot) in
             if DataSnapshot.hasChildren() != true{
-                SVProgressHUD.dismiss()
                 self.sendButton.isEnabled = true
+                SVProgressHUD.dismiss()
             }
         }
         dateBaseRef.observe(.childAdded) { (DataSnapshot) in
             let comment = DataSnapshot.value as! [String:String]
             if comment["commentID"]! == "\(self.commentID)"{
                 self.comments.append(comment["comment"]!)
-                self.commentTableView.reloadData()
                 self.sendButton.isEnabled = true
                 SVProgressHUD.dismiss()
+                self.commentTableView.reloadData()
+                //self.downloadImages(withUrl: self.selectedImageUrl)
             }else{
                 self.sendButton.isEnabled = true
                 SVProgressHUD.dismiss()
@@ -135,4 +140,6 @@ extension CommentViewController{
         completion(true)
     }
 }
+
+
 
