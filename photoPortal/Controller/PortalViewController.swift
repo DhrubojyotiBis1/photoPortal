@@ -10,11 +10,17 @@ import UIKit
 import Firebase
 import SVProgressHUD
 
-class PortalViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
+class PortalViewController: UIViewController,UITableViewDelegate,UITableViewDataSource ,AddProductViewControllerDelegate{
+    func AddProductViewControllerResponse(didSelectImage: Bool) {
+        self.isImageUploaded = didSelectImage
+    }
     
+    var documentId = [String]()
+    var isImageUploaded = false
     let imagePicker = UIImagePickerController()
     var selectedImage = UIImage()
     var commentID = Int()
+    var selectedDocumentId = String()
     var image = UIImage()
     var products = [productGeneralnformation]()
     
@@ -27,7 +33,15 @@ class PortalViewController: UIViewController,UITableViewDelegate,UITableViewData
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
         SVProgressHUD.dismiss()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if self.isImageUploaded{
+            getData()
+        }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -37,18 +51,19 @@ class PortalViewController: UIViewController,UITableViewDelegate,UITableViewData
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "portalTableViewCell", for: indexPath) as! PortalTableViewCell
         cell.productGeneralnformation = self.products[indexPath.row]
-        self.products[indexPath.row] = (cell.productGeneralnformation!)
+        cell.productGeneralnformation = self.products[indexPath.row]
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         self.image = self.products[indexPath.row].image
         self.commentID = Int(self.products[indexPath.row].commentID)!
+        self.selectedDocumentId = documentId[indexPath.row]
         performSegue(withIdentifier: "goToCommentVC", sender: nil)
     }
     
     private func configure(){
-        SVProgressHUD.show()
+        
         tableView.delegate = self
         tableView.dataSource = self
         imagePicker.delegate = self
@@ -67,12 +82,14 @@ class PortalViewController: UIViewController,UITableViewDelegate,UITableViewData
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "goToAddProductVC"{
             let distination = segue.destination as! AddProductViewController
+            distination.delegate = self
             distination.pickedImage = self.selectedImage
             distination.commentID = self.products.count + 1
         }else if segue.identifier == "goToCommentVC"{
             let destination = segue.destination as! CommentViewController
-            destination.commentID = self.commentID
+            destination.commentID = Int("\(self.commentID)")!
             destination.image = self.image
+            destination.documentId = self.selectedDocumentId
         }
     }
     
@@ -100,20 +117,34 @@ extension PortalViewController{
     //Data downloading part:
     
     private func getData(){
-        
-        let dateBaseRef = Database.database().reference().child("photoPortalProductInformation")
-        dateBaseRef.observe(.value) { (DataSnapshot) in
-            if DataSnapshot.hasChildren() != true{
+        self.products.removeAll()
+        SVProgressHUD.show()
+        let dataBaseRef = Firestore.firestore()
+        dataBaseRef.collection("Products").getDocuments(){ (querySnapshot, err) in
+            if querySnapshot?.count == 0 {
                 SVProgressHUD.dismiss()
+                return
             }
-        }
-        dateBaseRef.observe(.childAdded) { (DataSnapshot) in
-            let productInformation = DataSnapshot.value as! [String:String]
-            let productGeneralInfo = productGeneralnformation(productName: productInformation["name"]!, catagory: productInformation["catagory"]!, discription: productInformation["description"]!, filePath: productInformation["filePath"]!, commentID:  productInformation["commentID"]!)
-            self.products.append(productGeneralInfo)
+            if let err = err {
+                print("Error getting documents: \(err)")
+                SVProgressHUD.showError(withStatus: messages().somethingWentWrong)
+                return
+            } else {
+                for document in querySnapshot!.documents {
+                    print("\(document.documentID) => \(document.data())")
+                    
+                    let productInformation = document.data() as! [String:String]
+                    let productGeneralInfo = productGeneralnformation(productName: productInformation["name"]!, catagory: productInformation["catagory"]!, discription: productInformation["description"]!, filePath: productInformation["filePath"]!, commentID:  productInformation["commentID"]!)
+                    self.documentId.append(document.documentID)
+                    self.products.append(productGeneralInfo)
+                }
+                
+            }
             self.tableView.reloadData()
             SVProgressHUD.dismiss()
         }
     }
+        
+        
     
 }

@@ -11,10 +11,10 @@ import Firebase
 import SVProgressHUD
 
 class CommentViewController: UIViewController {
-    
     var commentID = Int()
     var image = UIImage()
     var comments = [String]()
+    var documentId = String()
     @IBOutlet weak var sendButton: UIButton!
     @IBOutlet weak var commentTextFeild: UITextField!
     @IBOutlet weak var commentTableView: UITableView!
@@ -26,7 +26,7 @@ class CommentViewController: UIViewController {
         // Do any additional setup after loading the view.
         self.commentTableView.delegate = self
         self.commentTableView.dataSource = self
-        self.getDate()
+        self.getData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -88,6 +88,7 @@ class CommentViewController: UIViewController {
             }
         }
         self.sendButton.isEnabled = true
+        self.commentTextFeild.text! = ""
     }
 
 }
@@ -109,35 +110,45 @@ extension CommentViewController : UITableViewDelegate,UITableViewDataSource{
 }
 
 extension CommentViewController{
-    
-    private func getDate(){
-        let dateBaseRef = Database.database().reference().child("photoPortalProductComment")
-        dateBaseRef.observe(.value) { (DataSnapshot) in
-            if DataSnapshot.hasChildren() != true{
+    private func getData(){
+        let dataBaseRef = Firestore.firestore()
+        dataBaseRef.collection("Products").document(self.documentId).collection("comments").getDocuments(completion: { (DocumentSnapshot, Error) in
+            if DocumentSnapshot?.count == 0{
                 self.sendButton.isEnabled = true
                 SVProgressHUD.dismiss()
+                return
             }
-        }
-        dateBaseRef.observe(.childAdded) { (DataSnapshot) in
-            let comment = DataSnapshot.value as! [String:String]
-            if comment["commentID"]! == "\(self.commentID)"{
+            guard DocumentSnapshot != nil else {
+                print("Error fetching document: \(Error!)")
+                self.sendButton.isEnabled = true
+                SVProgressHUD.showError(withStatus: messages().somethingWentWrong)
+                return
+            }
+            for document in DocumentSnapshot!.documents {
+                let comment = document.data() as! [String:String]
                 self.comments.append(comment["comment"]!)
                 self.sendButton.isEnabled = true
                 SVProgressHUD.dismiss()
                 self.commentTableView.reloadData()
-                //self.downloadImages(withUrl: self.selectedImageUrl)
-            }else{
-                self.sendButton.isEnabled = true
-                SVProgressHUD.dismiss()
             }
-        }
+        })
     }
     
     private func upload(comment:String,completion: @escaping((_ SCUESS:Bool)->())){
-        let dateBaseRef = Database.database().reference().child("photoPortalProductComment")
-        let commentToUpload = ["comment":comment,"commentID":"\(self.commentID)"]
-        dateBaseRef.childByAutoId().setValue(commentToUpload)
-        completion(true)
+        SVProgressHUD.show()
+    let dataBaseRef = Firestore.firestore()
+    let commentToUpload = ["comment":comment,"commentID":"\(self.commentID)"]
+        dataBaseRef.collection("Products").document(self.documentId).collection("comments").addDocument(data: commentToUpload) { (Error) in
+            if let err = Error {
+                print("Error adding document: \(err)")
+                SVProgressHUD.showError(withStatus: messages().somethingWentWrong)
+            } else {
+                print("Document added with ID: \(dataBaseRef.document)")
+                self.comments.append(comment)
+                self.commentTableView.reloadData()
+                SVProgressHUD.dismiss()
+            }
+        }
     }
 }
 

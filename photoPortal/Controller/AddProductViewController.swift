@@ -11,8 +11,14 @@ import FirebaseStorage
 import Firebase
 import SVProgressHUD
 
+protocol AddProductViewControllerDelegate
+{
+    func AddProductViewControllerResponse(didSelectImage: Bool)
+}
+
 class AddProductViewController: UIViewController {
     
+    var delegate:AddProductViewControllerDelegate?
     @IBOutlet weak var saveBUtton: UIBarButtonItem!
     var pickedImage = UIImage()
     let imagePicker = UIImagePickerController()
@@ -54,11 +60,15 @@ class AddProductViewController: UIViewController {
                     if sucess != nil{
                         SVProgressHUD.showSuccess(withStatus: messages().productUploaded)
                         self.navigationController?.popViewController(animated: true)
+                        self.delegate?.AddProductViewControllerResponse(didSelectImage: true)
+                    }else{
+                        self.delegate?.AddProductViewControllerResponse(didSelectImage: false)
                     }
                 })
 
             }else{
                 SVProgressHUD.showError(withStatus: messages().somethingWentWrong)
+                self.delegate?.AddProductViewControllerResponse(didSelectImage: false)
             }
             self.saveBUtton.isEnabled = true
         }
@@ -102,10 +112,21 @@ extension AddProductViewController{
     
     
     private func upload(name:String,catagory:String,description:String,pathFile:URL,completion: @escaping((_ SUCESS:String?)->())){
-        let ref = Database.database().reference().child("photoPortalProductInformation")
         let productData = ["name":name,"catagory":catagory,"description":description,"filePath":"\(pathFile)","commentID":"\(self.commentID)"]
-        ref.childByAutoId().setValue(productData)
-        completion("DONE")
+       /* let ref = Database.database().reference().child("photoPortalProductInformation")
+        ref.childByAutoId().setValue(productData)*/
+        
+        let dataBaseRef = Firestore.firestore()
+        var ref: DocumentReference? = nil
+        ref = dataBaseRef.collection("Products").addDocument(data:productData) { err in
+            if let err = err {
+                completion(nil)
+                print("Error adding document: \(err)")
+            } else {
+                completion("DONE")
+                print("Document added with ID: \(ref!.documentID)")
+            }
+        }
     }
     
 }
